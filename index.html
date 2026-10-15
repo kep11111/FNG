@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcane Grimoire: Fantasy Name Generator</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Cinzel Decorative, Cinzel, and Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800;900&family=Cinzel+Decorative:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            cinzel: ['Cinzel', 'serif'],
+            cinzelDeco: ['"Cinzel Decorative"', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            rpg: {
+              gold: '#e2b857',
+              goldHover: '#f5cf74',
+              parchment: '#dfd2b5',
+              darkbg: '#0c0b10',
+              panel: '#15141c',
+              border: '#2a2738',
+              accent: '#802828',
+              mystic: '#7c5295',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for fantasy aesthetic */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f0e15;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3c354f;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #cba343;
+    }
+
+    /* Ambient background styling */
+    body {
+      background-color: #08070b;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(93, 44, 133, 0.18) 0%, transparent 60%),
+        radial-gradient(circle at 10% 90%, rgba(189, 137, 47, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(136, 32, 32, 0.1) 0%, transparent 50%),
+        radial-gradient(#171424 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px;
+      color: #dfd2b5;
+    }
+
+    /* Subtle parchment textured inner panel */
+    .rpg-card {
+      background: linear-gradient(135deg, rgba(26, 23, 36, 0.85) 0%, rgba(16, 15, 23, 0.95) 100%);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(226, 184, 87, 0.22);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.7), 0 0 15px rgba(226, 184, 87, 0.05);
+    }
+    
+    .rpg-card:hover {
+      border-color: rgba(226, 184, 87, 0.38);
+    }
+
+    .gold-gradient-text {
+      background: linear-gradient(180deg, #fff2cc 0%, #d8a840 60%, #996e1a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .gold-btn {
+      background: linear-gradient(180deg, #e8c36a 0%, #b88629 100%);
+      color: #0c0904;
+      box-shadow: 0 4px 15px rgba(184, 134, 41, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .gold-btn:hover {
+      background: linear-gradient(180deg, #f5cf74 0%, #caa038 100%);
+      box-shadow: 0 6px 20px rgba(226, 184, 87, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+      transform: translateY(-1px);
+    }
+    .gold-btn:active {
+      transform: translateY(1px);
+    }
+
+    .dice-spin {
+      animation: diceRoll 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    @keyframes diceRoll {
+      0% { transform: rotate(0deg) scale(0.9); }
+      50% { transform: rotate(270deg) scale(1.15); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    /* Rune borders & accents */
+    .rune-divider {
+      position: relative;
+      text-align: center;
+    }
+    .rune-divider::before, .rune-divider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: calc(50% - 28px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(226, 184, 87, 0.4), transparent);
+    }
+    .rune-divider::before { left: 0; }
+    .rune-divider::after { right: 0; }
+
+    /* Custom radio and checkbox styling */
+    .custom-radio:checked + label {
+      border-color: #e2b857;
+      background-color: rgba(226, 184, 87, 0.12);
+      color: #fff2cc;
+      box-shadow: 0 0 12px rgba(226, 184, 87, 0.25);
+    }
+
+    /* Canvas overlay for particle burst */
+    #fx-canvas {
+      pointer-events: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 99;
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans flex flex-col justify-between selection:bg-amber-800 selection:text-white">
+
+  <!-- Particle Canvas for Spell/Spark Effects -->
+  <canvas id="fx-canvas"></canvas>
+
+  <!-- Top Toast Notification Box -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform -translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="px-5 py-2.5 rounded-full bg-[#1b1726] border border-amber-500/50 text-amber-200 shadow-xl flex items-center gap-2 text-sm tracking-wide font-cinzel">
+      <svg id="toast-icon" class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+      <span id="toast-text">Name copied to clipboard</span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="w-full pt-8 pb-4 px-4 text-center">
+    <div class="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full border border-amber-500/20 bg-amber-950/20 text-xs font-cinzel tracking-widest text-amber-300/80 uppercase">
+      <span>᚛ The Chronicler's Lexicon ᚜</span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-cinzelDeco font-bold gold-gradient-text tracking-wide drop-shadow-md">
+      Fantasy Name Generator
+    </h1>
+    <p class="text-sm sm:text-base text-stone-400 max-w-xl mx-auto mt-2 font-cinzel">
+      Summon authentic heroic names, clan lineages, and mythical titles for your tabletop campaigns, world-building, and tales.
+    </p>
+  </header>
+
+  <!-- Main Container -->
+  <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+
+    <!-- Controls Panel (Left Column) -->
+    <section class="lg:col-span-5 flex flex-col gap-5">
+      <div class="rpg-card rounded-2xl p-5 sm:p-6 relative overflow-hidden">
+        <!-- Corner Runes -->
+        <div class="absolute top-2 left-2 text-amber-500/15 text-xs font-mono select-none">ᛏ ᛋ ᛉ</div>
+        <div class="absolute top-2 right-2 text-amber-500/15 text-xs font-mono select-none">ᛟ ᚱ ᚨ</div>
+
+        <h2 class="text-lg font-cinzel font-bold text-amber-200 border-b border-amber-500/20 pb-2 mb-4 flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+            Incantation Archetype
+          </span>
+          <button id="sound-toggle-btn" title="Toggle Sound Effects" class="text-xs text-amber-300/70 hover:text-amber-200 px-2 py-1 rounded border border-amber-500/30 flex items-center gap-1">
+            <span id="sound-icon">🔊</span>
+            <span id="sound-label">Audio On</span>
+          </button>
+        </h2>
+
+        <!-- Culture / Genre Grid -->
+        <label class="block text-xs font-cinzel uppercase tracking-wider text-amber-300/80 mb-2">Heritage & Theme</label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-5" id="genre-selector">
+          <!-- Nordic -->
+          <div class="relative">
+            <input type="radio" name="genre" id="genre-nordic" value="nordic" class="custom-radio sr-only" checked>
+            <label for="genre-nordic" class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 text-center transition-all h-full">
+              <span class="text-lg mb-1">⚔️</span>
+              <span class="font-cinzel text-xs font-bold leading-tight">Nordic</span>
+              <span class="text-[10px] text-stone-500">Viking & Frost</span>
+            </label>
+          </div>
+
+          <!-- Elven / High Fantasy -->
+          <div class="relative">
+            <input type="radio" name="genre" id="genre-elven" value="elven" class="custom-radio sr-only">
+            <label for="genre-elven" class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 text-center transition-all h-full">
+              <span class="text-lg mb-1">🧝</span>
+              <span class="font-cinzel text-xs font-bold leading-tight">High Elf</span>
+              <span class="text-[10px] text-stone-500">Grace & Stars</span>
+            </label>
+          </div>
+
+          <!-- Dwarven -->
+          <div class="relative">
+            <input type="radio" name="genre" id="genre-dwarven" value="dwarven" class="custom-radio sr-only">
+            <label for="genre-dwarven" class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 text-center transition-all h-full">
+              <span class="text-lg mb-1">⚒️</span>
+              <span class="font-cinzel text-xs font-bold leading-tight">Dwarven</span>
+              <span class="text-[10px] text-stone-500">Stone & Anvil</span>
+            </label>
+          </div>
+
+          <!-- Medieval / Plain -->
+          <div class="relative">
+            <input type="radio" name="genre" id="genre-plain" value="plain" class="custom-radio sr-only">
+            <label for="genre-plain" class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 text-center transition-all h-full">
+              <span class="text-lg mb-1">🌾</span>
+              <span class="font-cinzel text-xs font-bold leading-tight">Medieval</span>
+              <span class="text-[10px] text-stone-500">Plain Folk</span>
+            </label>
+          </div>
+
+          <!-- Dark / Eldritch -->
+          <div class="relative">
+            <input type="radio" name="genre" id="genre-eldritch" value="eldritch" class="custom-radio sr-only">
+            <label for="genre-eldritch" class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 text-center transition-all h-full">
+              <span class="text-lg mb-1">👁️</span>
+              <span class="font-cinzel text-xs font-bold leading-tight">Eldritch</span>
+              <span class="text-[10px] text-stone-500">Dark & Void</span>
+            </label>
+          </div>
+
+          <!-- Draconic / Celestial -->
+          <div class="relative">
+            <input type="radio" name="genre" id="genre-celestial" value="celestial" class="custom-radio sr-only">
+            <label for="genre-celestial" class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 text-center transition-all h-full">
+              <span class="text-lg mb-1">🐉</span>
+              <span class="font-cinzel text-xs font-bold leading-tight">Celestial</span>
+              <span class="text-[10px] text-stone-500">Draconic Fire</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Gender Options -->
+        <label class="block text-xs font-cinzel uppercase tracking-wider text-amber-300/80 mb-2">Character Gender</label>
+        <div class="grid grid-cols-4 gap-2 mb-5">
+          <div>
+            <input type="radio" name="gender" id="gender-any" value="any" class="custom-radio sr-only" checked>
+            <label for="gender-any" class="block text-center py-2 px-1 text-xs font-medium rounded-lg border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 transition-all">
+              Any
+            </label>
+          </div>
+          <div>
+            <input type="radio" name="gender" id="gender-masc" value="masculine" class="custom-radio sr-only">
+            <label for="gender-masc" class="block text-center py-2 px-1 text-xs font-medium rounded-lg border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 transition-all">
+              Masc
+            </label>
+          </div>
+          <div>
+            <input type="radio" name="gender" id="gender-fem" value="feminine" class="custom-radio sr-only">
+            <label for="gender-fem" class="block text-center py-2 px-1 text-xs font-medium rounded-lg border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 transition-all">
+              Fem
+            </label>
+          </div>
+          <div>
+            <input type="radio" name="gender" id="gender-neutral" value="neutral" class="custom-radio sr-only">
+            <label for="gender-neutral" class="block text-center py-2 px-1 text-xs font-medium rounded-lg border border-stone-800 bg-[#121118] text-stone-300 cursor-pointer hover:border-amber-500/40 transition-all">
+              Neutral
+            </label>
+          </div>
+        </div>
+
+        <!-- Modifiers Checkboxes -->
+        <div class="space-y-3 mb-5 border-t border-b border-amber-500/15 py-4">
+          <label class="flex items-center justify-between cursor-pointer group">
+            <span class="text-sm font-cinzel text-stone-300 group-hover:text-amber-200">Include Surname / Clan</span>
+            <input type="checkbox" id="toggle-surname" checked class="w-4 h-4 rounded text-amber-500 bg-stone-900 border-stone-700 focus:ring-amber-500">
+          </label>
+          <label class="flex items-center justify-between cursor-pointer group">
+            <span class="text-sm font-cinzel text-stone-300 group-hover:text-amber-200">Include Epithets & Titles</span>
+            <input type="checkbox" id="toggle-title" checked class="w-4 h-4 rounded text-amber-500 bg-stone-900 border-stone-700 focus:ring-amber-500">
+          </label>
+          <label class="flex items-center justify-between cursor-pointer group">
+            <span class="text-sm font-cinzel text-stone-300 group-hover:text-amber-200">Generate Character Lore Snippet</span>
+            <input type="checkbox" id="toggle-lore" checked class="w-4 h-4 rounded text-amber-500 bg-stone-900 border-stone-700 focus:ring-amber-500">
+          </label>
+        </div>
+
+        <!-- Quantity Selector -->
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-2">
+            <label for="quantity-slider" class="text-xs font-cinzel uppercase tracking-wider text-amber-300/80">Batch Size</label>
+            <span id="quantity-badge" class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">5 names</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" class="qty-preset px-2.5 py-1 text-xs rounded border border-stone-700 bg-stone-900/60 hover:border-amber-500 text-stone-300" data-qty="1">1</button>
+            <button type="button" class="qty-preset px-2.5 py-1 text-xs rounded border border-amber-500/80 bg-amber-500/20 text-amber-200 font-bold" data-qty="5">5</button>
+            <button type="button" class="qty-preset px-2.5 py-1 text-xs rounded border border-stone-700 bg-stone-900/60 hover:border-amber-500 text-stone-300" data-qty="10">10</button>
+            <button type="button" class="qty-preset px-2.5 py-1 text-xs rounded border border-stone-700 bg-stone-900/60 hover:border-amber-500 text-stone-300" data-qty="20">20</button>
+            <input type="range" id="quantity-slider" min="1" max="25" value="5" class="w-full accent-amber-500 h-1.5 bg-stone-800 rounded-lg cursor-pointer ml-2">
+          </div>
+        </div>
+
+        <!-- Generate Action Button -->
+        <button id="generate-btn" class="gold-btn w-full py-3.5 px-6 rounded-xl font-cinzel font-bold text-base flex items-center justify-center gap-3 tracking-wider group cursor-pointer">
+          <svg id="dice-icon" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <span>Conjure Fantasy Names</span>
+        </button>
+
+      </div>
+
+      <!-- Quick Favorites Drawer / Summary Widget -->
+      <div class="rpg-card rounded-2xl p-4 sm:p-5">
+        <div class="flex items-center justify-between pb-3 border-b border-amber-500/20">
+          <h3 class="font-cinzel text-sm font-bold text-amber-200 flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg>
+            Bookmarked Lexicon (<span id="fav-count">0</span>)
+          </h3>
+          <div class="flex gap-2">
+            <button id="export-favs-btn" class="text-xs px-2.5 py-1 rounded border border-amber-500/30 text-amber-300/80 hover:text-amber-200 hover:border-amber-400 disabled:opacity-30 disabled:pointer-events-none transition-all">
+              Export TXT
+            </button>
+            <button id="clear-favs-btn" class="text-xs px-2 py-1 rounded text-red-400/70 hover:text-red-300 disabled:opacity-30 disabled:pointer-events-none transition-all">
+              Clear
+            </button>
+          </div>
+        </div>
+        <div id="favorites-list" class="mt-3 max-h-48 overflow-y-auto space-y-2 pr-1 text-xs text-stone-300">
+          <p class="text-stone-500 italic py-2 text-center">No names pinned to your grimoire yet. Click the bookmark icon on any name to preserve it.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Panel (Right Column) -->
+    <section class="lg:col-span-7 flex flex-col gap-4">
+      <!-- Action Toolbar -->
+      <div class="rpg-card rounded-xl p-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-cinzel text-stone-400">Current Order:</span>
+          <span id="active-genre-badge" class="px-2.5 py-0.5 rounded-full text-xs font-cinzel font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-300">Nordic Archetype</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="reroll-all-btn" class="px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-300 hover:bg-amber-500/10 text-xs font-cinzel font-semibold flex items-center gap-1.5 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Reroll All
+          </button>
+          <button id="copy-all-btn" class="px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-300 hover:bg-amber-500/10 text-xs font-cinzel font-semibold flex items-center gap-1.5 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            Copy All
+          </button>
+        </div>
+      </div>
+
+      <!-- Generated Names Scrollable Container -->
+      <div id="results-container" class="space-y-3 overflow-y-auto max-h-[700px] pr-1 pb-4">
+        <!-- Name Cards injected via JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full text-center py-4 border-t border-amber-500/10 text-xs text-stone-500 font-cinzel mt-4">
+    Crafted for Dungeon Masters, Fantasy Writers & Realm Creators • <span class="text-amber-500/70">May your chronicles be legendary</span>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // -------------------------------------------------------------
+    // 1. DATASETS & LINGUISTIC DICTIONARIES FOR REALMS
+    // -------------------------------------------------------------
+    const FANTASY_DATA = {
+      nordic: {
+        label: "Nordic / Viking",
+        masc: ["Torvald", "Bjorn", "Ragnar", "Ivar", "Sigurd", "Einar", "Halvar", "Stigand", "Leif", "Gunnar", "Hakon", "Ulf", "Brand", "Vidar", "Alrik", "Thorbjorn"],
+        fem: ["Astrid", "Freya", "Ingrid", "Sigrid", "Ragnild", "Hildur", "Ylva", "Thyra", "Bodil", "Gudrun", "Solveig", "Helga", "Gunnhild", "Liv", "Kari"],
+        neutral: ["Skarde", "Frost", "Rune", "Hagen", "Svenn", "Storm", "Kjell", "Vann"],
+        surnamePrefix: ["Frost", "Iron", "Storm", "Wolf", "Bear", "Grim", "Thunder", "Ice", "Blood", "Rune", "Spear", "Shield"],
+        surnameSuffix: ["shield", "fang", "axe", "breaker", "heim", "fist", "jaw", "helm", "crag", "walker", "son", "dottir"],
+        titles: ["the Skald", "the Iron-Willed", "Oath-Bound", "Shield of the North", "the Unyielding", "Wolf-Tamer", "of the Frozen Vale", "Jarl of Wyrm-Hold", "Blood-drinker"],
+        lore: [
+          "Sworn by the sacred oath of the ash tree, renowned for surviving forty days in the howling blizzard.",
+          "Commands the longships that cross the mist-shrouded fjords; carries a blade tempered in whale oil and ice.",
+          "A skald who knows eighteen verses of dragon-speech and can sever iron links with a single strike.",
+          "Born beneath a twin-aurora omen, feared across coastal villages for an unshakeable battle-rage."
+        ]
+      },
+      elven: {
+        label: "High Fantasy / Elven",
+        masc: ["Aerith", "Thalandor", "Celeborn", "Faelar", "Erevan", "Valanthil", "Aramil", "Ilphukiir", "Sylas", "Kaelen", "Lorandor", "Theron", "Aelion", "Quel'dorei", "Lindir"],
+        fem: ["Lyria", "Elentari", "Aredhel", "Morwen", "Silmarien", "Naelia", "Caelynn", "Elysia", "Sariel", "Althaea", "Naevys", "Luthien", "Yavanna", "Meriel"],
+        neutral: ["Auraen", "Illyrion", "Moonshadow", "Vael", "Sylph", "Lethan", "Caelis", "Zephyr"],
+        surnamePrefix: ["Moon", "Sun", "Star", "Dawn", "Silver", "Night", "Wind", "Willow", "Ever", "Shadow", "Spell", "Golden"],
+        surnameSuffix: ["whisper", "strider", "glen", "weaver", "breeze", "song", "leaf", "blossom", "dancer", "glade", "flame", "runner"],
+        titles: ["the Starsinger", "Weaver of Light", "of the Gilded Glade", "the Ageless", "Guardian of the Silver Fountain", "Keeper of the Astral Gate", "the Dawnbringer"],
+        lore: [
+          "Bearer of a ring forged from concentrated starlight; walks without disturbing so much as a petal upon the forest moss.",
+          "Has meditated for four centuries in the crystal canopies, speaking only in melodic polyphony.",
+          "An archer who can split an autumn leaf dropped from a thousand paces away with a bow of heartwood.",
+          "Exiled from the High Spire for unraveling the forbidden chronomancy scrolls of the First Age."
+        ]
+      },
+      dwarven: {
+        label: "Dwarven / Mountain Folk",
+        masc: ["Durnik", "Torin", "Thrain", "Balin", "Kraglin", "Bram", "Gloin", "Morgrim", "Rorik", "Huldur", "Balgor", "Vondur", "Kazador", "Brokk"],
+        fem: ["Helga", "Dagna", "Verna", "Bera", "Kari", "Thora", "Grima", "Mist", "Brunhilde", "Nora", "Orla", "Gerd", "Eldeth", "Disa"],
+        neutral: ["Flint", "Beryl", "Basalt", "Kag", "Onyx", "Ingot", "Pyre", "Lodestone"],
+        surnamePrefix: ["Stone", "Iron", "Gold", "Deep", "Anvil", "Hammer", "Forge", "Copper", "Rock", "Ore", "Boulder", "Crag"],
+        surnameSuffix: ["delve", "hammer", "breaker", "beard", "grip", "shield", "founder", "vein", "heart", "mason", "keeper", "brow"],
+        titles: ["the Mountain King", "Forgemaster", "the Unshakable", "Bane of Goblins", "the Runecarver", "of the Mithril Depths", "Troll-Cleaver", "Master of Kilns"],
+        lore: [
+          "Crafted their own war-hammer from meteoric iron quenched in volcanic subterranean springs.",
+          "Holds the genealogical chart of thirty generations chiseled directly into a slab of granite.",
+          "Survived the collapse of the Lower Hall and dug their way out with bare fists and a diamond pick.",
+          "Refuses to set foot under open sky, maintaining that only stone holds genuine honor."
+        ]
+      },
+      plain: {
+        label: "Plain / Common Medieval",
+        masc: ["Robin", "Jack", "Giles", "Tom", "William", "Peter", "Ned", "Walter", "Geoffrey", "Aldous", "Humphrey", "Barnaby", "Rowan", "Edmund"],
+        fem: ["Elspeth", "Maud", "Agnes", "Beatrice", "Joan", "Meg", "Alice", "Cecily", "Rowena", "Gwen", "Matilda", "Constance", "Edith", "Sybil"],
+        neutral: ["Pippin", "Robin", "Bram", "Cinder", "Dale", "Brook", "Ash", "Glen"],
+        surnamePrefix: ["Miller", "Fletcher", "Green", "Baker", "Carter", "Cooper", "Smith", "Tanner", "Thatcher", "Potter", "Shepherd", "Weaver"],
+        surnameSuffix: ["man", "field", "wood", "ford", "brook", "hill", "croft", "stead", "ton", "worth", "by", "well"],
+        titles: ["the Miller", "of Oakridge", "the Honest", "the Wayfarer", "the Piper", "of Green Hollow", "the Tavernkeep", "the Poacher", "the Resilient"],
+        lore: [
+          "Knows every game trail, pheasant burrow, and hidden creek within three days march of the castle.",
+          "Accidentally discovered a hidden smuggler's vault while repairing the town granary floorboards.",
+          "Possesses an ancient grandfather copper watch that mysteriously ticks backwards during solar eclipses.",
+          "Known in every inn between here and the coast for telling tall tales that occasionally turn out to be true."
+        ]
+      },
+      eldritch: {
+        label: "Dark Fantasy / Eldritch",
+        masc: ["Morvath", "Vane", "Malakor", "Xalvador", "Draven", "Ignis", "Kharon", "Sarix", "Nethor", "Vaelin", "Obsidian", "Mortimer", "Zul'kir", "Bael"],
+        fem: ["Vespera", "Lilith", "Morrigan", "Hecate", "Nyx", "Ravena", "Belladonna", "Sinestra", "Mortia", "Quela", "Sybilla", "Umbra", "Vesperia", "Zalira"],
+        neutral: ["Hollow", "Ash", "Void", "Shade", "Hex", "Crypt", "Raven", "Nocturne"],
+        surnamePrefix: ["Blood", "Shadow", "Night", "Gloom", "Bone", "Soul", "Dread", "Void", "Hollow", "Grim", "Blight", "Marrow"],
+        surnameSuffix: ["thorn", "wraith", "reaper", "grave", "veil", "bane", "weaver", "fall", "mancer", "specter", "rot", "cowl"],
+        titles: ["the Hollow", "the Undying", "Eater of Nightmares", "the Whispering Eye", "Lord of the Bleeding Veil", "the Hex-Binder", "Harbinger of Crows"],
+        lore: [
+          "Traded their reflection to a mirror-demon for forbidden rites of transmutation.",
+          "Surrounded by a subtle chill; candles flicker black when they cross sacred thresholds.",
+          "Carries a vial of quicksilver mixed with ash from the burned libraries of Kar-Kaddosh.",
+          "Speaks in whispered syllables that echo in the listener's mind three heartbeats before being uttered."
+        ]
+      },
+      celestial: {
+        label: "Celestial / Draconic / Mythic",
+        masc: ["Ignarion", "Balerion", "Aurelius", "Draconis", "Valerius", "Zephyrus", "Kaelgor", "Sol Invictus", "Pyroth", "Drakon", "Rhadamanthus", "Onyxian"],
+        fem: ["Solis", "Draconia", "Aurelia", "Pyra", "Ignis", "Tiamata", "Valeria", "Astraea", "Seraphina", "Celestia", "Valkyra", "Corona", "Drakaina"],
+        neutral: ["Solaris", "Zenith", "Eclipse", "Supernova", "Draco", "Pyroclast", "Aether", "Chronos"],
+        surnamePrefix: ["Sun", "Star", "Dragon", "Flame", "Gold", "Aether", "Sky", "Scale", "Dawn", "Pyre", "Cinder", "Solar"],
+        surnameSuffix: ["scale", "wing", "fang", "flare", "heart", "crest", "born", "rider", "blaze", "soarer", "scourge", "spire"],
+        titles: ["the Sun-Forged", "Bane of Serpents", "the Dragon-Blessed", "Scion of the Zenith", "Bearer of the Eternal Hearth", "the Unvanquished", "Flame-Wreathed"],
+        lore: [
+          "Veins pulse with liquid gold and dragonfire; untouched by normal earthly blades or pestilence.",
+          "Heralded by shooting stars and earthquakes whenever an ancestor's oath is renewed.",
+          "Wings of shimmering celestial plumage cast no shadow under the midday sun.",
+          "Tamed a volcanic drake atop the spire of Mount Cinder and binds storms to their war-banner."
+        ]
+      }
+    };
+
+    // -------------------------------------------------------------
+    // 2. AUDIO SYNTHESIZER (WEB AUDIO API)
+    // -------------------------------------------------------------
+    class FantasyAudio {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playDiceRoll() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        // Dice clatter bursts
+        for (let i = 0; i < 4; i++) {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(140 + Math.random() * 200, now + i * 0.08);
+          osc.frequency.exponentialRampToValueAtTime(40, now + i * 0.08 + 0.06);
+
+          filter.type = 'lowpass';
+          filter.frequency.value = 600;
+
+          gain.gain.setValueAtTime(0.2, now + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.06);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now + i * 0.08);
+          osc.stop(now + i * 0.08 + 0.07);
+        }
+
+        // Magical chime shimmer
+        setTimeout(() => {
+          if (!this.ctx) return;
+          const chimeTime = this.ctx.currentTime;
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, chimeTime + idx * 0.05);
+
+            gain.gain.setValueAtTime(0.08, chimeTime + idx * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.0001, chimeTime + idx * 0.05 + 0.4);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(chimeTime + idx * 0.05);
+            osc.stop(chimeTime + idx * 0.05 + 0.45);
+          });
+        }, 180);
+      }
+
+      playChime() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1320, now + 0.15);
+
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      }
+    }
+
+    const audio = new FantasyAudio();
+
+    // -------------------------------------------------------------
+    // 3. CANVAS PARTICLE BURST (GOLD & MAGIC SPARKS)
+    // -------------------------------------------------------------
+    const canvas = document.getElementById('fx-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Spark {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.radius = Math.random() * 2.5 + 1;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 5 + 2;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed - 1;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.03 + 0.015;
+        this.color = color || '#e2b857';
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.08; // gravity
+        this.alpha -= this.decay;
+      }
+      draw(c) {
+        c.save();
+        c.globalAlpha = Math.max(0, this.alpha);
+        c.fillStyle = this.color;
+        c.shadowColor = this.color;
+        c.shadowBlur = 8;
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      }
+    }
+
+    function spawnSparks(x, y, count = 28, color = '#f5cf74') {
+      for (let i = 0; i < count; i++) {
+        particles.push(new Spark(x, y, color));
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.update();
+        p.draw(ctx);
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // -------------------------------------------------------------
+    // 4. GENERATOR ENGINE
+    // -------------------------------------------------------------
+    let currentNames = [];
+    let favorites = JSON.parse(localStorage.getItem('fantasy_generator_favs') || '[]');
+
+    function getRandomItem(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function generateSingleName(genreKey, gender, withSurname, withTitle, withLore) {
+      const data = FANTASY_DATA[genreKey] || FANTASY_DATA.nordic;
+
+      // 1. First Name determination based on gender selection
+      let firstPool = [];
+      if (gender === 'masculine') {
+        firstPool = data.masc;
+      } else if (gender === 'feminine') {
+        firstPool = data.fem;
+      } else if (gender === 'neutral') {
+        firstPool = data.neutral;
+      } else {
+        // Any
+        firstPool = [...data.masc, ...data.fem, ...data.neutral];
+      }
+      const firstName = getRandomItem(firstPool);
+
+      // 2. Surname / Clan
+      let surname = "";
+      if (withSurname) {
+        if (genreKey === 'plain' && Math.random() > 0.4) {
+          // Standard medieval town or trade surname
+          surname = getRandomItem(data.surnamePrefix);
+        } else {
+          // Compound fantasy name (e.g., Ironshield, Moonwhisper)
+          const p = getRandomItem(data.surnamePrefix);
+          const s = getRandomItem(data.surnameSuffix);
+          surname = p + s;
+        }
+      }
+
+      // 3. Title / Epithet
+      let title = "";
+      if (withTitle && Math.random() > 0.15) {
+        title = getRandomItem(data.titles);
+      }
+
+      // Full assembly
+      let fullDisplayName = firstName;
+      if (surname) fullDisplayName += ` ${surname}`;
+      if (title) fullDisplayName += ` ${title}`;
+
+      // 4. Character Lore snippet
+      let lore = "";
+      if (withLore) {
+        lore = getRandomItem(data.lore);
+      }
+
+      return {
+        id: 'fn_' + Math.random().toString(36).substring(2, 9),
+        genreKey,
+        genreName: data.label,
+        firstName,
+        surname,
+        title,
+        fullName: fullDisplayName,
+        lore,
+        timestamp: Date.now()
+      };
+    }
+
+    function generateBatch() {
+      // Trigger Audio & Dice animation
+      audio.playDiceRoll();
+
+      const diceIcon = document.getElementById('dice-icon');
+      diceIcon.classList.remove('dice-spin');
+      void diceIcon.offsetWidth; // trigger reflow
+      diceIcon.classList.add('dice-spin');
+
+      // Spark button burst
+      const btn = document.getElementById('generate-btn');
+      const rect = btn.getBoundingClientRect();
+      spawnSparks(rect.left + rect.width / 2, rect.top + rect.height / 2, 35, '#f5cf74');
+
+      // Gather Form Options
+      const genre = document.querySelector('input[name="genre"]:checked')?.value || 'nordic';
+      const gender = document.querySelector('input[name="gender"]:checked')?.value || 'any';
+      const withSurname = document.getElementById('toggle-surname').checked;
+      const withTitle = document.getElementById('toggle-title').checked;
+      const withLore = document.getElementById('toggle-lore').checked;
+      const count = parseInt(document.getElementById('quantity-slider').value, 10);
+
+      // Update current genre badge
+      const activeData = FANTASY_DATA[genre];
+      document.getElementById('active-genre-badge').textContent = `${activeData.label} (${count})`;
+
+      // Generate items
+      currentNames = [];
+      for (let i = 0; i < count; i++) {
+        currentNames.push(generateSingleName(genre, gender, withSurname, withTitle, withLore));
+      }
+
+      renderNamesList();
+    }
+
+    // -------------------------------------------------------------
+    // 5. RENDERING UI
+    // -------------------------------------------------------------
+    const resultsContainer = document.getElementById('results-container');
+
+    function renderNamesList() {
+      resultsContainer.innerHTML = '';
+
+      if (currentNames.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="rpg-card rounded-2xl p-12 text-center text-stone-500">
+            <p class="font-cinzel text-base">Select your options and conjure names from the Grimoire.</p>
+          </div>
+        `;
+        return;
+      }
+
+      currentNames.forEach((item, index) => {
+        const isFav = favorites.some(f => f.fullName === item.fullName);
+        const card = document.createElement('div');
+        card.className = "rpg-card rounded-xl p-4 transition-all hover:scale-[1.008] duration-200 border-l-4 border-l-amber-500/70 group";
+        
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs px-2 py-0.5 rounded font-mono font-medium bg-stone-900 text-stone-400 border border-stone-800">
+                  #${index + 1}
+                </span>
+                <span class="text-xs px-2 py-0.5 rounded-full font-cinzel text-amber-300/80 bg-amber-950/40 border border-amber-500/20">
+                  ${item.genreName}
+                </span>
+              </div>
+              <h3 class="text-lg sm:text-xl font-cinzel font-bold text-amber-100 group-hover:text-amber-300 transition-colors tracking-wide">
+                ${item.fullName}
+              </h3>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex items-center gap-1.5 self-end sm:self-center">
+              <!-- Copy Button -->
+              <button 
+                class="copy-single-btn px-2.5 py-1.5 rounded-lg border border-stone-700 bg-stone-900/80 text-stone-300 hover:text-amber-200 hover:border-amber-500/50 text-xs font-cinzel flex items-center gap-1 transition-all"
+                data-name="${escapeHtml(item.fullName)}"
+                title="Copy name to clipboard">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                <span>Copy</span>
+              </button>
+
+              <!-- Single Reroll Button -->
+              <button 
+                class="reroll-single-btn px-2.5 py-1.5 rounded-lg border border-stone-700 bg-stone-900/80 text-stone-300 hover:text-amber-200 hover:border-amber-500/50 text-xs font-cinzel flex items-center gap-1 transition-all"
+                data-index="${index}"
+                title="Reroll this specific slot">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span>Reroll</span>
+              </button>
+
+              <!-- Favorite Bookmark Button -->
+              <button 
+                class="fav-toggle-btn p-1.5 rounded-lg border border-stone-700 bg-stone-900/80 hover:border-amber-500/50 text-xs transition-all ${isFav ? 'text-amber-400 border-amber-500/70' : 'text-stone-400'}"
+                data-index="${index}"
+                title="${isFav ? 'Remove from favorites' : 'Bookmark this name'}">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                  <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          ${item.lore ? `
+            <div class="mt-3 pt-2.5 border-t border-amber-500/10 flex items-start gap-2 text-xs text-stone-400 font-sans italic leading-relaxed">
+              <span class="text-amber-500/80 not-italic text-sm">📜</span>
+              <span>"${item.lore}"</span>
+            </div>
+          ` : ''}
+        `;
+
+        resultsContainer.appendChild(card);
+      });
+    }
+
+    function renderFavorites() {
+      const container = document.getElementById('favorites-list');
+      const countBadge = document.getElementById('fav-count');
+      const exportBtn = document.getElementById('export-favs-btn');
+      const clearBtn = document.getElementById('clear-favs-btn');
+
+      countBadge.textContent = favorites.length;
+      exportBtn.disabled = favorites.length === 0;
+      clearBtn.disabled = favorites.length === 0;
+
+      if (favorites.length === 0) {
+        container.innerHTML = `<p class="text-stone-500 italic py-2 text-center text-xs">No names pinned to your grimoire yet. Click the bookmark icon on any name to preserve it.</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      favorites.forEach((fav, i) => {
+        const item = document.createElement('div');
+        item.className = "flex items-center justify-between p-2 rounded-lg bg-stone-900/70 border border-stone-800 hover:border-amber-500/30 group transition-all";
+        item.innerHTML = `
+          <div class="truncate mr-2">
+            <span class="font-cinzel font-semibold text-amber-200 block truncate">${fav.fullName}</span>
+            <span class="text-[10px] text-stone-500">${fav.genreName || 'Fantasy'}</span>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button class="copy-fav-btn p-1 text-stone-400 hover:text-amber-300" data-name="${escapeHtml(fav.fullName)}" title="Copy">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </button>
+            <button class="remove-fav-btn p-1 text-stone-500 hover:text-red-400" data-index="${i}" title="Remove">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function toggleFavorite(index, eventTarget) {
+      const item = currentNames[index];
+      if (!item) return;
+
+      const existingIndex = favorites.findIndex(f => f.fullName === item.fullName);
+      if (existingIndex >= 0) {
+        // remove
+        favorites.splice(existingIndex, 1);
+        showToast(`Removed from grimoire.`);
+      } else {
+        // add
+        favorites.unshift(item);
+        audio.playChime();
+        if (eventTarget) {
+          const r = eventTarget.getBoundingClientRect();
+          spawnSparks(r.left + r.width / 2, r.top + r.height / 2, 18, '#ffd700');
+        }
+        showToast(`Pinned "${item.fullName}" to your Grimoire!`);
+      }
+
+      localStorage.setItem('fantasy_generator_favs', JSON.stringify(favorites));
+      renderFavorites();
+      renderNamesList();
+    }
+
+    function copyToClipboard(text) {
+      // Fallback-safe clipboard invocation
+      const tempInput = document.createElement('textarea');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        audio.playChime();
+        showToast(`Copied "${text}"`);
+      } catch (e) {
+        showToast(`Failed to copy.`);
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const textElem = document.getElementById('toast-text');
+      textElem.textContent = message;
+      toast.classList.remove('opacity-0', '-translate-y-20');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(window._toastTimeout);
+      window._toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-20');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2300);
+    }
+
+    function escapeHtml(string) {
+      return String(string).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // -------------------------------------------------------------
+    // 6. EVENT BINDINGS
+    // -------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+      // Generate button
+      document.getElementById('generate-btn').addEventListener('click', generateBatch);
+
+      // Reroll All toolbar
+      document.getElementById('reroll-all-btn').addEventListener('click', generateBatch);
+
+      // Copy All
+      document.getElementById('copy-all-btn').addEventListener('click', () => {
+        if (!currentNames.length) return;
+        const text = currentNames.map(n => n.fullName).join('\n');
+        copyToClipboard(text);
+        showToast(`All ${currentNames.length} names copied to clipboard!`);
+      });
+
+      // Sound toggle
+      const soundBtn = document.getElementById('sound-toggle-btn');
+      const soundIcon = document.getElementById('sound-icon');
+      const soundLabel = document.getElementById('sound-label');
+      soundBtn.addEventListener('click', () => {
+        audio.enabled = !audio.enabled;
+        soundIcon.textContent = audio.enabled ? '🔊' : '🔇';
+        soundLabel.textContent = audio.enabled ? 'Audio On' : 'Muted';
+      });
+
+      // Quantity Slider & Presets
+      const slider = document.getElementById('quantity-slider');
+      const badge = document.getElementById('quantity-badge');
+      slider.addEventListener('input', (e) => {
+        badge.textContent = `${e.target.value} names`;
+        highlightPreset(e.target.value);
+      });
+
+      const presets = document.querySelectorAll('.qty-preset');
+      presets.forEach(p => {
+        p.addEventListener('click', () => {
+          const val = p.getAttribute('data-qty');
+          slider.value = val;
+          badge.textContent = `${val} names`;
+          highlightPreset(val);
+        });
+      });
+
+      function highlightPreset(val) {
+        presets.forEach(p => {
+          if (p.getAttribute('data-qty') === String(val)) {
+            p.className = 'qty-preset px-2.5 py-1 text-xs rounded border border-amber-500/80 bg-amber-500/20 text-amber-200 font-bold';
+          } else {
+            p.className = 'qty-preset px-2.5 py-1 text-xs rounded border border-stone-700 bg-stone-900/60 hover:border-amber-500 text-stone-300';
+          }
+        });
+      }
+
+      // Results container delegate clicks
+      resultsContainer.addEventListener('click', (e) => {
+        // Copy single
+        const copyBtn = e.target.closest('.copy-single-btn');
+        if (copyBtn) {
+          const name = copyBtn.getAttribute('data-name');
+          copyToClipboard(name);
+          return;
+        }
+
+        // Reroll single
+        const rerollBtn = e.target.closest('.reroll-single-btn');
+        if (rerollBtn) {
+          const index = parseInt(rerollBtn.getAttribute('data-index'), 10);
+          const genre = document.querySelector('input[name="genre"]:checked')?.value || 'nordic';
+          const gender = document.querySelector('input[name="gender"]:checked')?.value || 'any';
+          const withSurname = document.getElementById('toggle-surname').checked;
+          const withTitle = document.getElementById('toggle-title').checked;
+          const withLore = document.getElementById('toggle-lore').checked;
+
+          currentNames[index] = generateSingleName(genre, gender, withSurname, withTitle, withLore);
+          audio.playDiceRoll();
+          renderNamesList();
+          return;
+        }
+
+        // Favorite bookmark toggle
+        const favBtn = e.target.closest('.fav-toggle-btn');
+        if (favBtn) {
+          const index = parseInt(favBtn.getAttribute('data-index'), 10);
+          toggleFavorite(index, favBtn);
+          return;
+        }
+      });
+
+      // Favorites list delegate clicks
+      const favsContainer = document.getElementById('favorites-list');
+      favsContainer.addEventListener('click', (e) => {
+        const copyBtn = e.target.closest('.copy-fav-btn');
+        if (copyBtn) {
+          copyToClipboard(copyBtn.getAttribute('data-name'));
+          return;
+        }
+
+        const rmBtn = e.target.closest('.remove-fav-btn');
+        if (rmBtn) {
+          const idx = parseInt(rmBtn.getAttribute('data-index'), 10);
+          favorites.splice(idx, 1);
+          localStorage.setItem('fantasy_generator_favs', JSON.stringify(favorites));
+          renderFavorites();
+          renderNamesList();
+        }
+      });
+
+      // Export Favorites to file
+      document.getElementById('export-favs-btn').addEventListener('click', () => {
+        if (!favorites.length) return;
+        let content = "=== CHRONICLER'S LEXICON: BOOKMARKED NAMES ===\n\n";
+        favorites.forEach((fav, i) => {
+          content += `${i + 1}. ${fav.fullName} [${fav.genreName || 'Fantasy'}]\n`;
+          if (fav.lore) content += `   Lore: ${fav.lore}\n`;
+          content += '\n';
+        });
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fantasy_names_${new Date().toISOString().slice(0,10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Exported saved names to TXT!');
+      });
+
+      // Clear all favorites
+      document.getElementById('clear-favs-btn').addEventListener('click', () => {
+        if (!favorites.length) return;
+        favorites = [];
+        localStorage.removeItem('fantasy_generator_favs');
+        renderFavorites();
+        renderNamesList();
+        showToast('Grimoire favorites cleared.');
+      });
+
+      // Initial run
+      renderFavorites();
+      generateBatch();
+    });
+  </script>
+</body>
+</html>
